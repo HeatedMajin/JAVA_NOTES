@@ -1,0 +1,10 @@
+1：显示一个窗口
+2：实现窗口的布局：添加textfield和textarea
+3：实现窗口的关闭、
+4：对回车键的响应
+5：编写server、连上server
+6：实现client向server发送数据
+7：实现client多个数据的发送
+8：实现多个client的连接
+9：修复client关闭产生的异常
+

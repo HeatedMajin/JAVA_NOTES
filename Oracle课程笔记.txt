@@ -1,0 +1,757 @@
+as 出错：Android SDK Tools 25.2.2
+第一课：客户端
+        1. Sql Plus(客户端），命令行直接输入：sqlplus，然后按提示输入用户名，密码。
+        2. 从开始程序运行:sqlplus，是图形版的sqlplus.
+        3. http://localhost:5560/isqlplus
+        
+        Toad：管理， PlSql Developer:
+
+
+第二课：更改用户
+        1. sqlplus sys/bjsxt as sysdba
+        2. alter user scott account unlock;(解锁)
+
+第三课：table structure
+        
+        1. 描述某一张表：desc 表名
+        2. select * from 表名
+第四课：select 语句：
+
+       1.计算数据可以用空表：比如：.select 2*3 from dual
+
+       2.select ename,sal*12 annual_sal from emp;与select ename,sal*12 "annual sal" from emp;
+	区别，加双引号保持原大小写。不加全变大写。
+       
+       3. select ename || "abcd" 如果连接字符串中含有单引号，用两个单引号代替一个单引号。
+
+第五课：distinct
+        select deptno from emp;
+        select distinct deptno from emp;
+
+        select distinct deptno from emp;
+        select distinct deptno ,job from emp
+        去掉deptno,job两者组合的重复。更多的项，就是这么多项的组合的不重复组合。
+第六课：Where
+        select * from emp where deptno =10;
+        select * from emp where deptno <>10;不等于10        
+        select * from emp where ename ='bike';
+        select ename,sal from emp where sal between 800 and 1500 (>=800 and <=1500)
+        空值处理:
+        select ename,sal,comm from emp where comm is (not) null;
+        select ename,sal,comm from emp where ename ( not)in ('smith','king','abc');
+        select ename from emp where ename like '_A%';_代表一个字母,%代表0个或多个字母. 如果查询%
+        可用转义字符.\%. 还可以用escape '$'比如:select ename from emp where ename like '%$a%' escape '$';
+
+第七课: orderby
+        
+         select * from dept; 
+         select * from dept order by dept desc;(默认:asc)
+         select ename,sal,deptno from emp order by deptno asc,ename desc;
+
+第八课: sql function1:    
+        select ename,sal*12 annual_sal from emp
+        where ename not like '_A%' and sal>800
+        order by sal desc;
+
+        select lower(ename) from emp;
+
+        select ename from emp  
+        where lower(ename) like '_a%';等同于
+        select ename from emp where ename like '_a%' or ename like '_A%';
+
+        select substr(ename,2,3) from emp;从第二字符截,一共截三个字符.
+        select chr(65) from dual 结果为:A
+        select ascii('a') from dual 结果为:65
+        select round(23.652,1) from dual; 结果为: 23.7
+        select round(23.652,-1) from dual; 20
+  
+        select to_char(sal,'$99,999.999') from emp;
+        select to_char(sal,'L99,999.999') from emp;人民币符号,L:代表本地符号
+	select to_cahr(sal,'$00,000.000') from emp;//9是代表任意一个数字，前面的没有代表的就不显示，而0是补上0
+
+
+        这个需要掌握牢:
+        select birthdate from emp;
+        显示为:
+        BIRTHDATE
+        ----------------
+        17-12月-80
+        ----------------
+
+        改为:
+        select to_char(birthdate,'YYYY-MM-DD HH:MI:SS') from emp;
+        
+        显示:
+         
+        BIRTHDATE
+        -------------------
+        1980-12-17 12:00:00
+        -------------------
+        
+        select to_char(sysdate,'YYYY-MM-DD HH24:MI:SS') from dual; //也可以改为:HH12
+        TO_CHAR(SYSDATE,'YY
+        -------------------
+        2007-02-25 14:46:14
+        
+
+        to_date函数:
+        select ename,birthdate from emp where birthdate > to_date('1981-2-20 12:34:56','YYYY-MM-DD HH24:MI:SS');
+        如果直接写 birthdate>'1981-2-20 12:34:56'会出现格式不匹配,因为表中的格式为: DD-MM月-YY.
+  
+        
+        select sal from emp where sal>888.88 无错.但
+        select sal from emp where sal>$1,250,00;
+        会出现无效字符错误. 
+        改为:
+        select sal from emp where sal>to_number('$1.250.00','$9,999,99');
+        
+        把空值改为0
+        select ename,sal*12+nvl(comm,0) from emp;
+        这样可以防止comm为空时,sal*12相加也为空的情况.
+
+
+第九课: Group function 组函数
+        max,min,avg ,count,sum函数
+        
+        select to_char(avg(sal),'99999999,99') from emp;
+        //显示两位小数
+        
+        select round(avg(sal),2) from emp;
+	//四舍五入的显示两位小数
+        结果:2073.21
+          
+        select count(*) from emp where deptno=10;
+        select count(ename) from emp where deptno=10; count某个字段,如果这个字段不为空就算一个.
+        select count(distinct deptno) from emp;
+        select sum(sal) from emp;
+
+第十课: Group by语句
+        
+        需求:现在想求,求每个部门的平均薪水.
+        select avg(sal) from emp group by deptno;
+        select deptno avg(sal) from emp group by deptno;
+        
+        select deptno,job,max(sal) from emp group by deptno,job;
+        
+       求薪水值最高的人的名字.
+       select ename,max(sal) from emp;出错,因为max只有一个值,但等于max值的人可能好几个,不能匹配.
+       应如下求:
+       select ename from emp where sal=(select max(sal) from emp);
+
+       Group by语句应注意,
+
+       出现在select中的字段,如果没出现在组函数中,必须出现在Group by语句中.
+        
+    
+  第十一课: Having 对分组结果筛选
+       
+       Where是对单条纪录进行筛选,Having是对分组结果进行筛选.
+      
+       select avg(sal),deptno from emp 
+       group by deptno 
+       having avg(sal)>2000;
+       
+       查询工资大于1200雇员,按部门编号进行分组,分组后平均薪水大于1500,按工薪倒序排列.
+       select avg(sal) from emp 
+       where sal>1200
+       group by deptno
+       having avg(sal)>1500
+       order by avg(sal) desc;
+        
+   第十二课:子查询
+       
+       谁挣的钱最多(谁:这个人的名字,  钱最多)
+       
+       select 语句中嵌套select 语句,可以在where,from后.
+       
+             
+       问那些人工资,在平均工资之上.
+       
+       select ename,sal from emp where sal>(select avg(sal) from emp);
+
+
+       查找每个部门挣钱最多的那个人的名字.
+       select ename ,deptno from emp where sal in(select max(sal) from ename group by deptno) 查询会多值.
+
+       应该如下:
+       
+       select  max(sal),deptno from emp group by deptno;当成一个表.语句如下:
+       select ename, sal from emp join(select  max(sal) max_sal,deptno from emp group
+       by deptno) t on(emp.sal=t.max_sal and emp.deptno=t.deptno); 	
+       
+       每个部门的平均薪水的等级. 
+       分析:首先求平均薪水(当成表),把平均薪水和另外一张表连接.
+       
+       
+第十四课:self_table_connection
+       
+       把某个人的名字以及他的经理人的名字求出来(经理人及这个人在表中同处一行)
+       
+       分析:首先求出这个人的名字,取他的编号,然后从另一张表与其相对应编号,然后找到经理的名字.
+       
+       select e1.ename ,e2.ename from emp e1,emp e2 where e1.mgr= e2.empno.
+       
+       empno编号和MGR都是编号.
+
+
+第十15课: SQL1999_table_connections    
+         
+      select ename,dname,grade from emp e,dept d, sqlgrade s
+      where e.deptno = d.deptno and e.sql between s.losal and s.hisal and
+      job<>'CLERK';
+      
+      有没有办法把过滤条件和连接条件分开来? 出于这样考虑,Sql1999标准推出来了.有许多人用的还是
+      旧的语法,所以得看懂这种语句.
+      
+      
+      
+      select ename,dname from emp,dept;(旧标准).
+      select ename,dname from emp cross join dept;(1999标准)
+       
+      select ename,dname from emp,dept where emp.deptno=dept.deptno (旧) 
+      select ename,dname from emp join dept on(emp.deptno = dept.deptno); 1999标准.没有Where语句.
+      select ename,dname from emp join dept using(deptno);等同上句,但不推荐使用.
+      
+      select ename,grade from emp e join salgrade s on(e.sal between s.losal and s.hisal);
+      join 连接语句, on过滤条件。连接，条件一眼分开。如果用Where语句较长时，连接语句和过滤语句混在一起。
+      
+      三张表连接：
+      slect ename,dname, grade from 
+      emp e join dept d on(e.deptno=d.deptno)
+      join salgrade s on(e.sal between s.losal and s.hisal)
+      where ename not like '_A%';
+      把每张表连接 条件不混在一起，然后数据过滤条件全部区分开来。读起来更清晰，更容易懂一点。
+      
+      select e1.ename,e2.ename from emp e1 join emp e2 on(e1.mgr = e2.emptno);
+
+      左外连接：会把左边这张表多余数据显示出来。
+      select e1.ename,e2,ename from emp e1 left join emp e2 on(e1.mgr =e2.empno);left 后可加outer
+      右外连接：
+    select ename,dname from emp e right outer join dept d on(e.deptno =d.deptno); outer可以取掉。
+        
+      即把左边多余数据，也把右边多余数据拿出来，全外连接。
+      select ename,dname from emp e full join dept d on(e.deptno =d.deptno); 
+
+
+16-23 课：求部门平均薪水的等级
+
+       A.求部门平均薪水的等级。
+
+       select deptno,avg_sal,grade from 
+       (select deptno,avg(sal) avg_sal from emp group by deptno)t
+       join salgrade s on(t.avg_sal between s.losal and s.hisal)
+       
+       B.求部门平均的薪水等级
+       select deptno,avg(grade) from 
+       (select deptno,ename, grade from emp join salgrade s on(emp.sal between s.losal and
+       s.hisal)) t
+       group by deptno
+
+       C.那些人是经理
+       select ename from emp where empno in(select mgr from emp);
+       select ename from emp where empno in(select distinct mgr from emp);
+       
+       D.不准用组函数，求薪水的最高值（面试题）
+       
+       select distinct sal from emp where sal not in(
+       select distinct e1.sal from emp e1 join emp e2 on (e1.sal<e2.sal));
+       
+       E.平均薪水最高的部门编号
+       
+       select deptno,avg_sal from
+       (select avg(sal)avg_sal,deptno from emp group by deptno)
+       where avg_sal=
+       (select max(avg_sal)from 
+       (select avg(sal) avg_sal,deptno from emp group by deptno)
+       )
+      
+       F.平均薪水最高的部门名称
+       select dname from dept where deptno=
+      ( 
+        select deptno from
+        (select avg(sal)avg_sal,deptno from emp group by deptno)
+        where avg_sal=
+        (select max(avg_sal)from 
+        (select avg(sal) avg_sal,deptno from emp group by deptno)
+        )
+       )
+      
+      G.求平均薪水的等级最低的部门的部门名称
+        
+        组函数嵌套
+        如：平均薪水最高的部门编号，可以E.更简单的方法如下：
+        select deptno,avg_sal from 
+        (select avg(sal) avg_sal,deptno from emp group by deptno)
+        where avg_sal =
+        (select max(avg(sal)) from emp group by deptno)
+        
+        组函数最多嵌套两层
+        
+        分析：
+        首先求
+        1.平均薪水： select avg(sal) from group by deptno;
+
+        2.平均薪水等级：  把平均薪水当做一张表，需要和另外一张表连接salgrade
+        select  deptno,grade avg_sal from 
+          ( select deptno,avg(sal) avg_sal from emp group by deptno) t
+        join salgrade s on(t.avg_sal between s.losal and s.hisal)
+        
+        上面结果又可当成一张表。
+        
+        DEPTNO    GRADE    AVG_SAL
+      --------  -------  ----------
+        30           3   1566.66667
+        20           4   2175
+        10           4   2916.66667
+
+        3.求上表平均等级最低值
+        
+        select min(grade) from
+        (
+          select deptno,grade,avg_sal from
+           (select deptno,avg(sal) avg_sal from emp group by deptno)t
+          join salgrade s on(t.avg_sal between s.losal and s.hisa)
+         )
+
+        4.把最低值对应的2结果的那张表的对应那张表的deptno, 然后把2对应的表和另外一张表做连接。
+          
+          select dname ,deptno,grade,avg_sal from
+            (
+  	      select deptno,grade,avg_sal from
+              (select deptno,avg(sal) avg_sal from emp group by deptno)t
+             join salgrade s on(t.avg_sal between s.losal and s.hisal)
+             ) t1
+            join dept on (t1.deptno = dept.deptno)
+            where t1.grade =
+            ( 
+              select deptno,grade,avg_sal from
+               (select deptno,avg(sal) avg_sal from emp group by deptno) t
+                join salgrade s on(t.avg_sal between s.losal and s.hisal)
+               )
+            )
+         结果如下：
+         
+        DNAME    DEPTNO     GRADE    AVG_SAL
+      --------  -------  --------   --------
+        SALES        30        3    1566.6667 
+     
+         
+       H: 视图（视图就是一张表，一个字查询）
+        
+       G中语句有重复，可以用视图来简化。
+       conn sys/bjsxt as sysdba;
+       grant create table,create view to scott;
+       conn scott/tiger
+       创建视图：
+       create view v$_dept_avg-sal_info as
+       select deptno,grade,avg_sal from
+        ( select deptno,avg(sal) avg_sal from emp group by deptno)t
+       join salgrade s on 9t.avg_sal between s.losal and s.hisal)
+      
+       然后 
+       select * from v$_dept_avg-sal_info
+       
+       结果如下：
+       DEPTNO      GRADE    AVG_SAL
+      --------  -------  ----------
+        30           3   1566.66667
+        20           4   2175
+        10           4   2916.66667
+
+       然后G中查询可以简化成：
+       select  dname,t1.deptno,grade,avg_sal from
+       v$_dept_avg-sal_info t1
+       join dept on9t1.deptno =dept.deptno)
+       where t1.grade=
+       (
+	select min(grade) from v$_dept_avg-sal_info t1
+       ) 
+     
+
+
+第二十七课：create table
+
+create table  stu(
+id number(8),
+name varchar(20),
+sax char(4),
+age number(100),
+sdate date,
+grade number(10) default 5,
+class number(10) default 6	
+)
+
+第二十八课：constraint
+五个约束条件 ：非空、主码、外码、唯一、check
+两种加约束的方式：字段级、表级
+
+
+create table stu (
+id number(8) constraint stu_id_notnull not null,
+name varchar(20) constraint stu_name_nutnull not null,
+sax char(4) constraint stu_sax_notnull not null,
+age number(100),
+sdate date,
+grade number(10) default 5,
+class number(10) default 6,
+constraint stu_grade_class_notNull not null(grade,class) 
+)
+
+第二十九课：constraint 主外码
+create table class (
+cid number(2) primary key,
+snum number(2)
+)
+
+create table stu(
+id number(10) primary key,
+name varchar(20) not null,
+sax char(2),
+age number(3),
+sdate date,
+class number(20) reference class(cid)
+)
+
+第三十课：面试题（棘手的）
+	
+	product
+产品(name)   颜色(color) 数量(num)
+1	     红		 1
+1	     黑		 2
+2	     红		 null
+2	     蓝 	 2
+1	     红		 7
+
+
+求:各类商品中红色商品多于蓝色商品的商品名称 以及 差额的数量
+create view v$_pro_name_color_num 
+as(
+	select name,color,sum(num) num
+	from product
+	group by name,color
+);
+
+select p1.name,p1.num-p2.num from
+v$_pro_name_color_num p1 join v$_pro_name_color_num p2 
+on(p1.name=p2.name)
+where p1.color='r' and p2.color='b' and p1.num>p2.num
+
+虽然做出来了但是十分钟有点长了
+
+第三十一课：修改表结构
+//一般最好不要随便修改表结构，会产生许多问题
+alter table stu add (email varchar(20));
+alter table stu modify(email varchar(19));//注意什么时候不可以修改
+alter table stu add constraint stu_email_unique unique(email);
+alter table stu drop constraint stu_email_unique;
+
+第三十二课:数据字典表
+
+查询用户下有哪些表、视图、约束……
+select table_name from user_tables;
+select view_name from user_views;
+select constraint_name from user_constraints;
+……
+
+那么如何查看有哪些数据字典表？
+select table_name from dictionary;
+(dictionary表 存放了 数据字典表的信息===表的表)
+
+
+第三十三课：indexes and views
+
+create index idx_stu_email on stu(email);//在stu表的email属性上建立索引
+drop index idx_stu_email;//删除索引
+
+索引创建:手动、建表时的主码、建表时的唯一码
+索引的优点：查询变得更快
+索引的缺点：修改变得更慢
+
+create view v$_dept_avsalgrade as (select dname ……)//创建视图
+drop view v$_dept_avsalgrade;//删除视图
+视图的优点：简化查询、安全性、隐私性
+视图的缺点：维护起来会更加困难
+
+第三十四课：sequence的使用
+
+这是oracle独有的！
+需求是，向表中添加数据时，一个字段（如id）可以依次递加，那么就需要使用sequence了。
+create sequence table_article_id;//创建一个sequence
+insert into article values(table_article_id.nextval,'a','b'); //使用sequence
+
+create sequence sqe start with 1 //从几开始
+increment by 2 //每次增加2 
+
+第三十五课：三范式
+
+第一范式：表有主码、列不可分
+
+
+
+第三十六课：BBS
+需求：
+1.论坛是分板块的
+2.帖子是有回复的
+3.只有注册的用户才能发表帖子
+4.每个版块有自己的版主，版主有相应的权限
+
+
+第三十八---四十六课:PL/SQL
+-----简单语句块-----
+begin
+	dbms_output.put_line('hello world');
+end;
+-----简单的变量声明------
+declare
+	v_name varchar(20);
+begin
+	v_name := 'hello world'
+	dbms_output.putline(v_name);
+end;
+----简单的小异常-------
+declare
+	v_num number(2) :=0;
+begin
+	v_num := 10/v_num;
+	dbms_output.put_line('no error');
+exception
+	when others then
+		dbms_output.put_line('error');
+end;
+-----变量的声明-----
+declare
+ v_count binary_integer :=1;
+ v_num number(4,2) :=10.0; 
+ v_char char(4) := 'abcd';
+ v_date date := sysdate;
+ v_long long := 12312123123;
+ v_boolean boolean := true;
+begin
+ dbms_output.put_line(v_count || v_date);
+end;
+
+---注释-----
+
+使用 --  注释单行
+使用/**/ 注释多行
+
+----变量声明，使用%type 属性---
+declare
+ v_detpno dept.deptno%type;
+ v_deptno v_detpno%type;
+begin
+ dbms_output.put_line('test');
+end;
+
+---声明table类型的变量
+declare
+ type deptno_table is table of dept.deptno%type index by binary_integer;
+ v_deptno_tabl deptno_table;
+begin
+ v_deptno_tabl(0) := 1;
+ v_deptno_tabl(1) :=9;
+ v_deptno_tabl(-1):=-1;
+end;
+
+--record变量类型(相当于Java中的类)
+declare 
+  type deptddl is record (
+	deptno dept.deptno%type,
+	dname dept.dname%type,
+	loc dept.loc%type	
+	);
+  dept_dname_dno_loc deptddl;
+begin 
+  dept_dname_dno_loc.deptno := 123;
+  dept_dname_dno_loc.dname := 'game';
+  dept_dname_dno_loc.loc := 'bj';
+end;
+
+
+--使用%rowtype来声明record
+declare 
+  v_dept dept%rowtype;
+begin
+  v_dept.dname := 'game';
+  v_dept.deptno := 50;
+  v_dept.loc := 'bj';
+end;
+
+--使用select语句(返回且只能返回一条记录)
+declare 
+  type deptddl is record (
+	dno dept.deptno%type,
+	dname dept.danme%type,
+	loc dept.loc%type
+	);
+  v_dept dpetddl;
+begin 
+  select * into v_dept from dept where deptno =10 ;
+  dbms_output.output_line(v_dept.dno||' '||v_dept.dname)
+end;
+
+--快速使用select
+declare 
+  v_dept dept%rowtype;
+begin
+  select * into v_dept from dept where deptno =10 ;
+  dbms_output.put_line(v_dept.deptno||' '||v_dept.dname);
+end;
+
+--使用update、insert、delete和以前一样,需要commit
+declare 
+  v_deptno dept.deptno%type := 29;
+  v_dname dept.dname%type := 'game';
+  v_loc dept.loc%type := 'bj';
+begin
+  insert into dept values (v_deptno,v_dname,v_loc);
+  commit;
+end;
+
+--有几条数据被影响(上一句sql执行完)
+declare 
+  v_deptno dept.deptno%type := 29;
+  v_dname dept.dname%type := 'game';
+  v_loc dept.loc%type := 'bj';
+begin
+  insert into dept values (v_deptno,v_dname,v_loc);
+  dbms_output.put_line(sql%rowcount||'影响了几条数据'); --1条
+  commit;
+  --dbms_output.put_line(sql%rowcount||'影响了几条数据'); --0条
+end;
+   
+--执行DDL语句
+begin
+  execute immediate 'create table T(nnn varchar(20) default ''a'')';
+end;
+
+--条件语句
+declare
+ v_sal emp.sal%type;
+begin
+ select sal into v_sal from emp where empno =7934;
+ if(v_sal<1200)  then
+  dbms_output.put_line('low');
+ elsif(v_sal<2000) then
+  dbms_output.put_line('middle');
+ else
+  dbms_output.put_line('high');
+ end if;
+end;
+
+--循环语句1（类似于java的do...while()）
+declare
+ v_count binary_integer := 1;
+begin
+ loop
+	dbms_output.put_line(v_count);
+	v_count := v_count+1;
+	exit when (v_count>=11);
+ end loop;
+end;
+
+--循环语句2（类似于java的when）
+declare 
+ v_count binary_integer := 1;
+begin
+  while v_count <=10 loop
+	dbms_output.put_line(v_count);
+	v_count := v_count +1;
+  end loop;
+end;
+
+--循环语句3（相当于java的for循环）
+begin
+  for k in 1..10 loop
+	dbms_output.put_line(k);
+  end loop;
+
+  for k in reverse 1..10 loop
+	dbms_output.put_line(k);  
+  end loop;
+end;
+
+--异常处理1
+declare
+ v_temp emp.empno%type;
+begin
+ select empno into v_temp from emp where deptno = 10;
+exception
+ when too_many_rows then
+   dbms_output.put_line('太多记录了');
+ when others then
+   dbms_output.put_line('error');
+end;
+
+--异常处理2
+declare
+ v_temp emp.empno%type;
+begin
+ select empno into v_temp from emp where deptno = 100;
+exception
+ when no_data_found then
+   dbms_output.put_line('没找到记录');
+ when others then
+   dbms_output.put_line('error');
+end;
+
+--异常处理之记录异常
+create table error_log(
+	id number primary key ,
+	errcode number,
+	errmsg varchar2(1024),
+	errdate date
+);
+create sequence seq_errlog_id start with 1 increment by 1;
+
+declare 
+  v_errcode number;
+  v_errmsg varchar2(1024);
+begin
+  delete from dept where deptno =10;
+  commit;
+exception
+  when others then
+	rollback;
+	v_errcode := SQLCODE;
+	v_errmsg := SQLERRM;
+	insert into error_log values (tabl_errlog_id.nextval,v_errcode,v_errmsg,sysdate);
+	commit;
+end;
+	
+
+--游标
+delcare 
+	cursor c is 
+		select * from emp;
+	v_emp emp%rowtype;
+begin
+	open c;
+	fetch c into v_emp;
+	dbms_output.put_line(v_emp.name);
+	close c;
+end;
+
+--游标遍历
+declare
+	cursor c is 
+		select * from emp;
+	v_emp emp%rowtype;
+begin
+	open c;
+	loop
+		fetch c into v_emp;
+		exit when (c%notfound);
+		dbms_output.put_line(v_emp.ename);
+	end loop;
+	close c;
+end;
+
+
+
+
+
+
+
+
+
